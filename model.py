@@ -14,6 +14,7 @@ class User(db.Model):
     user_id = db.Column(db.Integer, 
               autoincrement=True,
               primary_key=True)
+    user_name = db.Column(db.String, unique=True)          
     email=db.Column(db.String, unique=True)
     password = db.Column(db.String)
 
@@ -35,7 +36,7 @@ class Room(db.Model):
                      primary_key=True)
     room_name = db.Column(db.String, unique=True)
 
-    post = db.relationship('Post', backref='rooms')
+    
     
     def __repr__(self):
         return f'<Room room_id={self.room_id} name={self.room_name}>'               
@@ -54,16 +55,14 @@ class Post(db.Model):
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.room_id'))
     
     comment = db.relationship('Comment', backref='posts')
-    like = db.relationship('User', secondary='likes',
+    user = db.relationship('User', secondary = 'likes',
                             backref='posts')
-
+    room = db.relationship('Room', backref='posts')                        
     
-
-                            
     def __repr__(self):
         return f'<Post post_id={self.post_id} link={self.link}>'
 
-class like(db.Model):
+class Like(db.Model):
     __tablename__ = 'likes'
 
     like_id = db.Column(db.Integer, 
@@ -85,7 +84,7 @@ class Tag(db.Model):
                      primary_key=True)
     text = db.Column(db.String, unique=True)
     
-    post_tag = db.relationship('Post', secondary = 'post_tags', 
+    post = db.relationship('Post', secondary = 'post_tags', 
                             backref='tags')
     def __repr__(self):
         return f'<Tag tag_id={self.tag_id} text={self.text}>'
@@ -100,12 +99,16 @@ class Post_tag(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey('posts.post_id'))
     
 
+
     def __repr__(self):
         return f'<Like like_id={self.like_id}>'   
 
 class Comment(db.Model):
     __tablename__ = 'comments'
-
+    
+    comment_id = db.Column(db.Integer, 
+                    autoincrement=True,
+                     primary_key=True)
     comment_time = db.Column(db.DateTime)
     body = db.Column(db.String, unique=True)
     
