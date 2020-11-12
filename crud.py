@@ -3,6 +3,8 @@
 from model import db, User, Room, Post, Like, Tag, Post_tag, Comment, connect_to_db
 from datetime import datetime
 
+
+
 def create_user(user_name, email, password):
     """Create and Return new user"""
 
@@ -55,7 +57,7 @@ def create_comment(user, post, body):
     db.session.commit()    
 
     return comment
-    
+
 if __name__ == '__main__':
     from server import app
     connect_to_db(app)               

@@ -19,8 +19,10 @@ class User(db.Model):
     password = db.Column(db.String)
 
     comment = db.relationship('Comment', backref='users')
-
+    like = db.relationship('Like', backref='users') 
+    
     def __repr__(self):
+    
      """Show info about user"""
      
      return f'<User user_id={self.user_id} email={self.email}>'
@@ -54,10 +56,11 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.room_id'))
     
-    comment = db.relationship('Comment', backref='posts')
-    user = db.relationship('User', secondary = 'likes',
+    # comment = db.relationship('Comment', backref='posts')
+    user = db.relationship('User', 
                             backref='posts')
-    room = db.relationship('Room', backref='posts')                        
+    room = db.relationship('Room', backref='posts')
+    like = db.relationship('Like', backref='posts')                        
     
     def __repr__(self):
         return f'<Post post_id={self.post_id} link={self.link}>'
@@ -84,8 +87,12 @@ class Tag(db.Model):
                      primary_key=True)
     text = db.Column(db.String, unique=True)
     
-    post = db.relationship('Post', secondary = 'post_tags', 
-                            backref='tags')
+    post_tag_id = db.Column(db.Integer, db.ForeignKey('tags.tag_id'))
+    
+    
+    post_tag = db.relationship('Post_tag', backref='tags')
+    
+    
     def __repr__(self):
         return f'<Tag tag_id={self.tag_id} text={self.text}>'
 
@@ -98,7 +105,9 @@ class Post_tag(db.Model):
     tag_id = db.Column(db.Integer, db.ForeignKey('tags.tag_id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.post_id'))
     
-
+    post = db.relationship('Post',  
+                            backref='post_tags')
+    
 
     def __repr__(self):
         return f'<Like like_id={self.like_id}>'   
