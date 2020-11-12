@@ -18,8 +18,6 @@ class User(db.Model):
     email=db.Column(db.String, unique=True)
     password = db.Column(db.String)
 
-    comment = db.relationship('Comment', backref='users')
-    like = db.relationship('Like', backref='users') 
     
     def __repr__(self):
     
@@ -38,8 +36,6 @@ class Room(db.Model):
                      primary_key=True)
     room_name = db.Column(db.String, unique=True)
 
-    
-    
     def __repr__(self):
         return f'<Room room_id={self.room_id} name={self.room_name}>'               
 
@@ -56,12 +52,10 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.room_id'))
     
-    # comment = db.relationship('Comment', backref='posts')
     user = db.relationship('User', 
                             backref='posts')
     room = db.relationship('Room', backref='posts')
-    like = db.relationship('Like', backref='posts')                        
-    
+                             
     def __repr__(self):
         return f'<Post post_id={self.post_id} link={self.link}>'
 
@@ -73,8 +67,10 @@ class Like(db.Model):
                      primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.post_id'))
-
-
+    
+    user = db.relationship('User', backref='likes')
+    post = db.relationship('Post', backref='likes')
+    
     def __repr__(self):
         return f'<Like like_id={self.like_id}>'  
 
@@ -86,12 +82,6 @@ class Tag(db.Model):
                     autoincrement=True,
                      primary_key=True)
     text = db.Column(db.String, unique=True)
-    
-    post_tag_id = db.Column(db.Integer, db.ForeignKey('tags.tag_id'))
-    
-    
-    post_tag = db.relationship('Post_tag', backref='tags')
-    
     
     def __repr__(self):
         return f'<Tag tag_id={self.tag_id} text={self.text}>'
@@ -108,9 +98,10 @@ class Post_tag(db.Model):
     post = db.relationship('Post',  
                             backref='post_tags')
     
-
+    tag = db.relationship('Tag', backref='post_tags')
+    
     def __repr__(self):
-        return f'<Like like_id={self.like_id}>'   
+        return f'<Post_tag post_tag_id={self.post_tag_id}>'   
 
 class Comment(db.Model):
     __tablename__ = 'comments'
@@ -124,7 +115,9 @@ class Comment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.post_id'))
     
-
+    user = db.relationship('User', backref='comments')
+    post = db.relationship('Post',  
+                            backref='comments')
     def __repr__(self):
         return f'<Tag post_id={self.post_id} body={self.body}>' 
 

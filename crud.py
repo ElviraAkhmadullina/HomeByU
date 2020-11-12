@@ -8,7 +8,7 @@ from datetime import datetime
 def create_user(user_name, email, password):
     """Create and Return new user"""
 
-    user = User(user=user_name, email=email, password=password)
+    user = User(user_name=user_name, email=email, password=password)
 
     db.session.add(user)
     db.session.commit()
