@@ -1,0 +1,42 @@
+[
+    {
+        "room_name": "living room"
+    },
+    {
+        "room_name": "bedroom"
+    },
+    {
+        "room_name": "kitchen"
+    },
+    {
+        "room_name": "patio"
+    },
+    {
+        "room_name": "home office"
+    },
+    {
+        "room_name": "dining room"
+    },
+    {
+        "room_name": "bathroom"
+    },
+    {
+        "room_name": "basement"
+    },
+    {
+        "room_name": "garage"
+    },
+    {
+        "room_name": "family room"
+    },
+    {
+        "room_name": "attic"
+    },
+    {
+        "room_name": "loft"
+    },
+    {
+        "room_name": "closet"
+    }
+
+]

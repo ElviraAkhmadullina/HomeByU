@@ -17,12 +17,13 @@ def create_user(user_name, email, password):
       
 
 def create_room(room_name):
-    room = Room(name=room_name)
+    
+    room = Room(room_name=room_name)
 
     db.session.add(room)
     db.session.commit()  
 
-    return room_name
+    return room
 
 
 def create_post(user, room, link, release_date):     
