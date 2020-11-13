@@ -14,6 +14,7 @@ def create_user(user_name, email, password):
     db.session.commit()
 
     return user
+      
 
 def create_room(room_name):
     room = Room(name=room_name)
@@ -22,6 +23,7 @@ def create_room(room_name):
     db.session.commit()  
 
     return room_name
+
 
 def create_post(user, room, link, release_date):     
     post=Post(user=user, room=room, link=link, 

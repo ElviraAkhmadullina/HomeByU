@@ -4,6 +4,8 @@
 # import json
 # from random import choise, randint
 # from datetime import datetime
+# from faker import Faker
+
 
 # import crud
 # import model
