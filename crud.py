@@ -14,6 +14,14 @@ def create_user(user_name, email, password):
     db.session.commit()
 
     return user
+
+def get_users():
+    """Return all users"""
+    return User.query.all()
+
+def get_user_by_email(email):
+    """Return user by email"""
+    return User.query.filter(User.email == email).first()
       
 
 def create_room(room_name):
@@ -24,6 +32,13 @@ def create_room(room_name):
     db.session.commit()  
 
     return room
+def get_movies():
+
+    return Room.query.all()
+
+def get_room_by_id(room_id):
+
+    return Room.query.get(room_id)    
 
 
 def create_post(user, room, link, release_date):     

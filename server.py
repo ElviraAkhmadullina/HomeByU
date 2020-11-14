@@ -16,10 +16,10 @@ def homepage():
 
     return render_template('homepage.html')
 
-@app.route('/sign_up') 
+@app.route('/login') 
 def sign_up():
 
-    render_template('sign_up.html', users=users)
+    render_template('login.html')
 
 @app.route('/users', methods=['POST'])
 def register_user():
@@ -31,12 +31,17 @@ def register_user():
 
     user = crud.get_user_by_email(email)
     if user:
-        flash('Cannot create an account with that email. Try again')
+        flash('Cannot create an account with that email. Already exist')
     else:
-        crud.create_user(email, password)
+        crud.create_user(user_name,email, password)
         flash('Accoubt created! Please log in.') 
-    return redirect('/sign_up')         
+    return redirect('/login')         
 
+# @app.route('/post_form', method=[POST])
+# def create_post():
+
+
+#     return render_template('post_form.html')
 
 if __name__=="__main__":
     connect_to_db(app)

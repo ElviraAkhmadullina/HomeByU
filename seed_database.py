@@ -32,3 +32,12 @@ for room in room_data:
 
     rooms_in_db.append(db_room)
 
+#Create 10 users
+for n in range(10):
+    user_name = 'user'
+    email = f'user{n}@test.com'  #unique email
+    password = 'test'
+
+    user = crud.create_user(user_name, email, password)
+
+    
