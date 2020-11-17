@@ -2,7 +2,7 @@
 
 import os #module from Python's library, code related to working with your computer's operating system
 import json
-# from random import choise, randint
+from random import choice, randint
 from datetime import datetime
 
 
@@ -17,19 +17,12 @@ os.system('createdb rooms')
 model.connect_to_db(server.app)
 model.db.create_all()
 
-# Load data from data/rooms.json file
-with open('data/rooms.json') as f:
-    room_data = json.loads(f.read())
-
 # Create rooms, store them in list so we can use them
 # to create fake posts, likes and comments later
-
 rooms_in_db = []
-for room in room_data:
-    room_name = room['room_name']
-
+rooms = ["living room", "bedroom", "kitchen"]
+for room_name in rooms:
     db_room = crud.create_room(room_name)    
-
     rooms_in_db.append(db_room)
 
 #Create 10 users

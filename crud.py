@@ -21,8 +21,13 @@ def get_users():
 
 def get_user_by_email(email):
     """Return user by email"""
+
     return User.query.filter(User.email == email).first()
-      
+
+def validate_user_password(password):
+    """Return User by password"""
+    return User.query.filter(User.password == password).first()
+
 
 def create_room(room_name):
     
@@ -32,9 +37,12 @@ def create_room(room_name):
     db.session.commit()  
 
     return room
-def get_movies():
+
+
+def get_rooms():
 
     return Room.query.all()
+
 
 def get_room_by_id(room_id):
 
@@ -47,6 +55,11 @@ def create_post(user, room, link, release_date):
     db.session.add(post)
     db.session.commit()
     return post
+
+def get_posts():
+    """Return all posts"""
+
+    return Post.query.all()    
 
 def create_like(user, post):
     like=Like(user=user, post=post)

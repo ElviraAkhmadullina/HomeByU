@@ -5,21 +5,34 @@
 <h1>Welcome!</h1>
 
 <h2>Create an Account</h2>
-<form action="/users" method="POST"
+<form action="/user" method="POST"
    <p>
-       Name <input type="text" name="user_name"
+       Name <input type="text" name="username">
    </p>
 
    <p>
-       Email <input type="text" name="email"
+       Email <input type="text" name="email">
    </p>
 
    <p>
-       Password <input type="password" name="password"
+       Password <input type="password" name="password">
    </p>
 
    <p>
-       <input type="submit"
+       <input type="submit">
    </p>
-</form>   
-   {% endblock %}
+</form>
+
+<h2>Login</h2>
+<form action="/login" method="POST">
+    <p>
+        Email <input type="text" name="email">
+    </p>
+    <p>
+        Password <input type="password" name="password">
+    </p>
+    <p>
+        <input type="submit">
+    </p>
+</form> 
+{% endblock %}
