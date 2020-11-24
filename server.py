@@ -1,8 +1,10 @@
-# """Server for movie ratings app"""
 
-from flask import (Flask, render_template, request, flash, session, redirect) 
-from model import connect_to_db
-import crud
+
+from flask import (Flask, render_template, request, flash, session, redirect, g) 
+from model import db, User, Room, Post, Like, Tag, Post_tag, Comment, connect_to_db
+from datetime import datetime
+import datetime
+from functools import wraps
 
 from jinja2 import StrictUndefined
 
@@ -10,35 +12,42 @@ app = Flask(__name__)
 app.secret_key = "dev"
 app.jinja_env.undefined = StrictUndefined
 
+def login_required(decorated_view):
+    @wraps(decorated_view)
+    def decorated_function(*args, **kwargs):
+        if g.current_user is None:
+            return redirect('/')
+        return decorated_view(*args, **kwargs) 
+    return decorated_function       
+
+@app.before_request
+def pre_process_all_requests():
+    """Setup the request context"""
+
+    user_id = session.get('user_id')
+    if user_id:
+        g.current_user = User.query.get(user_id)
+        g.logged_in = True
+        g.email = g.current_user.email
+        g.user_id = g.current_user.user_id
+        # Hashed password
+        g.password = g.current_user.password
+    else:
+        g.logged_in = False
+        g.current_user = None
+        g.email = None
+
 @app.route('/')
 def homepage():
     """View homepage"""
-    
-    if "user_id" in session:
-        return redirect('/dashboard')
 
-    return render_template('homepage.html')
+    return render_template('homepage.html', user=g.current_user)
 
-@app.route('/dashboard')
-def show_dashboard():
-    if "user_id" not in session:
-        flash("Please log in!")
-        return redirect("/")
-
-    return render_template('dashboard.html')
-
-
-@app.route('/register_page') 
-def show_login_and_register():
-
-    return render_template('login.html')
-    
 
 @app.route('/create_post')
 def show_create_post_form():
-    rooms = crud.get_rooms()
+    rooms = Room.query.all()
     
-    print("\n\n\nAll the rooms:")
     for room in rooms:
         print(room)
 
@@ -48,54 +57,126 @@ def show_create_post_form():
 def all_rooms():
     """View all rooms"""
 
-    rooms = crud.get_rooms()
+    rooms = Room.query.all()
 
     return render_template('all_rooms.html', rooms=rooms)
+
 
 @app.route('/posts')
 def all_posts():
     """View all posts"""
 
-    posts = crud.get_posts()
+    posts = Post.query.all() 
 
-    return render_template('all_posts.html', posts=posts)    
+    return render_template('all_posts.html', posts=posts) 
 
-@app.route('/user', methods=['POST'])
+@app.route('/posts/<post_id>')
+def show_posts(post_id): 
+    """ Show a particular post"""
+
+    post = Post.query.get(post_id)
+
+    return render_template('post_details.html', post=post)
+
+
+@app.route('/submit_post', methods=['POST'])
+def submit_post():
+    print(request.form)
+
+    room_id = request.form.get('room_id')
+    link = request.form.get('link')
+    post_title = request.form.get('post_title')
+    post_body = request.form.get('post_body')
+    image = request.form.get('image')
+    user_id = session.get('user_id')
+    user = User.query.filter(User.user_id == user_id).first()
+    room = Room.query.get(room_id) 
+
+    
+    post=Post(user=user, room=room, link=link, 
+            post_title=post_title, 
+            post_body=post_body, image=image)
+    db.session.add(post)
+    db.session.commit()
+    return redirect(f"/posts/{post.post_id}")
+
+@app.route('/dashboard')
+@login_required 
+def show_dashboard():
+    post_tags = Post_tag.query.filter(Post_tag.user_id == g.user_id).all()
+
+    all_tags = Tag.query.all()
+    total_tags = []
+    for each in all_tags:
+        total_tags.append(each)
+
+    return render_template('dashboard.html', 
+                        user=g.current_user,
+                        posts_tags=post_tags)
+
+@app.route('/register_page', methods=['GET']) 
+
+def show_login_and_register():
+
+    return render_template('login.html')
+
+@app.route('/register', methods=['POST'])
 def register_user():
     """Create a new user"""
-
+    #Get the user's name, email and password from the form
     user_name = request.form.get('user_name')
     email = request.form.get('email')
     password = request.form.get('password')
-
-    user = crud.get_user_by_email(email)
+    
+    tags = request.form.getlist("tag")
+    #Chek whether the user exist
+    user = User.query.filter(User.email == email).first()
+    
     if user:
-        flash('Cannot create an account with that email. Already exist')
+        flash('{} Already exist. Please log in'.format(email))
+        return redirect("/login")
     else:
-        crud.create_user(user_name,email, password)
-        flash('Account created! Please log in.') 
-    return redirect('/')    
+        user = User(user_name=user_name, email=email,
+                    password=password)
+        db.session.add(user)
+        db.session.commit()
+        for tag in tags:
+            connection = Post_tag(user_id=user.user_id, tag_id=int(tag))
+            db.session.add(connection)
+            db.session.commit()
+        session['user_id'] = user.user_id        
+        return redirect('/dashboard')
+        
+@app.route('/login', methods=['GET'])
+def login_form():
+
+    return render_template("login.html")
 
 @app.route('/login', methods=['POST'])
 def login_user():
 
     email = request.form.get('email') 
     password = request.form.get('password')
-    print(f'\n\n\n\n\nEmail is = {email}')
 
-    user = crud.get_user_by_email(email)
+    user = User.query.filter(User.email == email).first()
 
     # If the password matches the user's password, log in
     # otherwise don't let them log in
     if user.password == password:
         flash('Welcome Back!')
         session['user_id'] = user.user_id
-    else:
-        flash("No account by that name! Please create an account!") 
+        return redirect("/dashboard")
+
+    flash("No account by that name! Please create an account!") 
     
-    return redirect('/')            
+    return redirect('/login')            
 
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("See you later!")
 
+    return redirect("login.html")
 
 if __name__=="__main__":
     connect_to_db(app)

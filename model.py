@@ -2,7 +2,7 @@
 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-
+from sqlalchemy.sql import func
 db = SQLAlchemy()
 
 
@@ -46,9 +46,14 @@ class Post(db.Model):
 
     post_id = db.Column(db.Integer, 
                     autoincrement=True,
-                     primary_key=True)
+                      primary_key=True)
+    image = db.Column(db.String)
     link =  db.Column(db.String)
-    release_date = db.Column(db.DateTime)
+    release_date = db.Column(db.DateTime, server_default=func.now())
+    post_title = db.Column(db.String)
+    post_body = db.Column(db.String)
+    image = db.Column(db.String)
+    
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.room_id'))
     
@@ -94,12 +99,12 @@ class Post_tag(db.Model):
                      primary_key=True)
     tag_id = db.Column(db.Integer, db.ForeignKey('tags.tag_id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.post_id'))
-    
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     post = db.relationship('Post',  
                             backref='post_tags')
     
     tag = db.relationship('Tag', backref='post_tags')
-    
+    user = db.relationship("User", backref='post_tags')
     def __repr__(self):
         return f'<Post_tag post_tag_id={self.post_tag_id}>'   
 

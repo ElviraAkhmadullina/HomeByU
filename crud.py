@@ -19,14 +19,22 @@ def get_users():
     """Return all users"""
     return User.query.all()
 
+def get_user_by_id(user_id):
+
+    return User.query.filter(User.user_id == user_id).first()    
+
 def get_user_by_email(email):
     """Return user by email"""
 
     return User.query.filter(User.email == email).first()
 
-def validate_user_password(password):
-    """Return User by password"""
+def get_user_by_password(password):
+    """Return user by password"""
+
     return User.query.filter(User.password == password).first()
+
+def get_user_by_user_name(user_name):
+    return User.query.filter(User.user_name == user_name).first()
 
 
 def create_room(room_name):
@@ -49,9 +57,12 @@ def get_room_by_id(room_id):
     return Room.query.get(room_id)    
 
 
-def create_post(user, room, link, release_date):     
+def create_post(user, room, link, 
+                  post_title, post_body, image):     
+    
     post=Post(user=user, room=room, link=link, 
-            release_date=release_date)
+            post_title=post_title, 
+            post_body=post_body, image=image)
     db.session.add(post)
     db.session.commit()
     return post
@@ -59,7 +70,11 @@ def create_post(user, room, link, release_date):
 def get_posts():
     """Return all posts"""
 
-    return Post.query.all()    
+    return Post.query.all() 
+
+def get_post_by_id(post_id):
+
+    return Post.query.get(post_id)
 
 def create_like(user, post):
     like=Like(user=user, post=post)
@@ -74,8 +89,17 @@ def create_tag(text):
     db.session.commit()    
     
     return tag
+def create_user(user_name, email, password):
+    """Create and Return new user"""
 
-def create_post_tag(tag, post):
+    user = User(user_name=user_name, email=email, password=password)
+
+    db.session.add(user)
+    db.session.commit()
+
+    return user
+
+def create_post_tag(tag_id, user_id, post_id):
     post_tag=Post_tag(tag=tag, post=post)
     db.session.add(post_tag)
     db.session.commit()

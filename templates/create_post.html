@@ -6,47 +6,53 @@
 
 <h2>Choose room</h2>
 
-<form>
-    <select name="choose room">
+<form action="/submit_post" method="post">
+    <select name="room_id">
         {% for room in rooms %}
             <option value="{{ room.room_id }}">
                 {{ room.room_name }}
             </option>
         {% endfor %}
     </select>
-</form> 
+ 
 
 <h2>Include tags</h2>
-<form action="/add" method="post">
+
     <input id="tag" name="tag" type="text" placeholder="Tag Name">
 <input id="Add Tag" type="submit">
-</form>
+
 
 <h2>Preview Image</h2>
-
 <input type="file"
        id="image" name="image"
        accept="image/jpeg">
-<h3> OR </h3>      
-
-<form action="/add" method="post">
-    <input id="url" name="image" type="text" placeholder="Image Url">
-<input id="Add Image" type="submit">
-</form>
 
 
-<form>
+<h2>Include Title</h2>
+
     <label>Add Title:</label>
-    <textarea name="title"></textarea>
-  </form>
-  <form>
+    <textarea name="post_title"></textarea>
+  
+  <h2>What About your Post</h2>
+  
     <label>About:</label>
-    <textarea name="about"></textarea>
+    <textarea name="post_body"></textarea>
+  
+  
+  <h2>Include Link to your post</h2>
+  
+    <label for="url">Add a link:</label>
+    <input type="url" name="url" id="url"
+    placeholder="https://example.com">
+
+    <h2>Submit</h2>
+    <input id="Add Tag" type="submit">
+
   </form>
-  <form>
-    <label>Add a link:</label>
-    <textarea name="link"></textarea>
-  </form>
+
+  
+
+
 
 {% endblock %}
 
