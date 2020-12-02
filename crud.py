@@ -100,7 +100,7 @@ def create_user(user_name, email, password):
     return user
 
 def create_post_tag(tag_id, user_id, post_id):
-    post_tag=Post_tag(tag=tag, post=post)
+    post_tag=Post_tag(tag=tag, post=post, user=user)
     db.session.add(post_tag)
     db.session.commit()
     

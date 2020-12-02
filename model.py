@@ -49,10 +49,11 @@ class Post(db.Model):
                       primary_key=True)
     image = db.Column(db.String)
     link =  db.Column(db.String)
-    release_date = db.Column(db.DateTime, server_default=func.now())
+    publish_date = db.Column(db.DateTime, server_default=func.now())
     post_title = db.Column(db.String)
     post_body = db.Column(db.String)
     image = db.Column(db.String)
+    
     
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.room_id'))
@@ -86,7 +87,7 @@ class Tag(db.Model):
     tag_id = db.Column(db.Integer, 
                     autoincrement=True,
                      primary_key=True)
-    text = db.Column(db.String, unique=True)
+    name = db.Column(db.String, unique=True)
     
     def __repr__(self):
         return f'<Tag tag_id={self.tag_id} text={self.text}>'
@@ -105,6 +106,8 @@ class Post_tag(db.Model):
     
     tag = db.relationship('Tag', backref='post_tags')
     user = db.relationship("User", backref='post_tags')
+    post = db.relationship('Post',  
+                            backref='post_tags')
     def __repr__(self):
         return f'<Post_tag post_tag_id={self.post_tag_id}>'   
 

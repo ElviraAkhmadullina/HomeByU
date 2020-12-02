@@ -1,6 +1,6 @@
 
 
-from flask import (Flask, render_template, request, flash, session, redirect, g) 
+from flask import Flask, render_template, request, flash, session, redirect, g, jsonify, url_for
 from model import db, User, Room, Post, Like, Tag, Post_tag, Comment, connect_to_db
 from datetime import datetime
 import datetime
@@ -12,12 +12,12 @@ app = Flask(__name__)
 app.secret_key = "dev"
 app.jinja_env.undefined = StrictUndefined
 
-def login_required(decorated_view):
-    @wraps(decorated_view)
+def login_required(f):
+    @wraps(f)
     def decorated_function(*args, **kwargs):
-        if g.current_user is None:
-            return redirect('/')
-        return decorated_view(*args, **kwargs) 
+        if not g.logged_in:
+            return redirect('login')
+        return f(*args, **kwargs) 
     return decorated_function       
 
 @app.before_request
@@ -25,24 +25,146 @@ def pre_process_all_requests():
     """Setup the request context"""
 
     user_id = session.get('user_id')
-    if user_id:
-        g.current_user = User.query.get(user_id)
+    current_user = User.query.get(user_id)
+    if current_user:
+        
         g.logged_in = True
-        g.email = g.current_user.email
-        g.user_id = g.current_user.user_id
-        # Hashed password
-        g.password = g.current_user.password
+        g.email = current_user.email
+        g.user_id = current_user.user_id
+        # Hashed passwords
+        g.password = current_user.password
     else:
         g.logged_in = False
-        g.current_user = None
         g.email = None
 
 @app.route('/')
 def homepage():
     """View homepage"""
+    
+    return render_template('homepage.html')
 
-    return render_template('homepage.html', user=g.current_user)
+@app.route('/unlike', methods=['POST'])
+@login_required
+def unlike_like():
 
+    if g.logged_in:
+        check = Like.query.filter(Like.user_id == g.user_id,
+                                  Like.post_id == request.form.get('postId')
+                                  ).first()
+        if check:
+
+            like = Like.query.filter(Like.user_id == g.user.id,
+                                            Like.post_id == request.form.get('postId')
+                                            ).first()
+            db.session.delete(like)
+            db.session.commit()
+            return jsonify({'confirm': True, 'id': request.form.get('postId')}) 
+        else:
+            return jsonify({'confirm':'False'})                                                             
+
+
+@app.route('/like', methods=['POST'])
+@login_required
+def like_an_post():
+
+    if g.logged_in:
+        check = Like.query.filter(Like.user_id == g.user_id,
+                                   Like.post_id == request.form.get('postId')
+                                    ).first()
+    if not check:
+
+        like = Like(user_id=g.user_id, post_id=request.form.get('postId'))
+
+        db.session.add(like)
+        db.session.commit()
+        return jsonify({'confirm': True, 'id': request.form.get('postId')})
+    else:
+        return jsonify({'confirm': 'False'})                                    
+
+@app.route('/timeline')
+@login_required
+def displey_users_timeline():
+    
+    posts_tags = Post_tag.query.filter(Post_tag.user_id == g.user_id).all()
+    likes = Like.query.filter(Like.user_id == g.user_id).all()
+    like_ids = [like.post_id for like in likes]
+
+    tags = []
+    for item in posts_tags:
+        tags.append(item.tag_id)
+
+    Post.query.filter(Post.tag_id.in_(tags),
+                              ).order_by(Post.publish_date.desc()).all()
+    return render_template('dashboard.html',
+                             user=User.query.get(g.user_id),
+                             posts_tags=posts_tags,
+                             like_ids=like_ids)                             
+
+@app.route('/add_tag', methods=['POST'])
+@login_required
+def follow_tag():
+
+    if g.logged_in:
+        check = Post_tag.query.filter(Post_tag.user_id == g.user_id,
+                                       Post_tag.tag_id == request.form.get('add_tag')
+                                         ).first()
+        if not check:
+
+            connection = Post_tag(post_id=g.user_id, tag_id=request.form.get('add_tag'))
+
+            db.session.add(connection)
+            db.session.commit()
+
+    return redirect("/dashboard")     
+
+@app.route('/remove_tag', methods=['POST'])
+@login_required
+def unfollow_tag():
+
+    if g.logged_in:
+        check = Post_tag.query.filter(Post_tag.user_id == g.user_id,
+                                      Post_tag.tag_id == request.form.get('rem_tag')
+                                      ).first()
+        if check:
+
+            tag = Post_tag.query.filter(Post_tag.user_id == g.user_id,
+                                           Post_tag.tag_id == request.form.get('rem_tag')) .first()
+
+            db.session.delete(tag)
+            db.session.commit()
+
+        return redirect('/dashboard')                                                                
+
+@app.route('/dashboard')
+@login_required 
+def show_dashboard():
+    
+    post_tags = Post_tag.query.filter(Post_tag.user_id == g.user_id).all()
+
+    followed_tags = []
+    for each in post_tags:
+        followed_tags.append(each.tag)
+
+    all_tags = Tag.query.all()
+    total_tags = []
+    for each in all_tags:
+        total_tags.append(each)
+    
+    not_followed_tags = []
+    for each in total_tags:
+        if each not in followed_tags:
+            not_followed_tags.append(each)
+
+    likes = Like.query.filter(Like.user_id == g.user_id).all()
+    post = [{'post_body': text_from_html(like.post.post_body),
+            'db_info': like.post} for like in likes]
+    
+    like_ids = [like.post_id for like in likes]
+    return render_template('user_details.html', 
+                        user=User.query.get(g.user_id),
+                        post_tags=post_tags,
+                        like_ids=like_ids,
+                        not_followed_tags=not_followed_tags)
 
 @app.route('/create_post')
 def show_create_post_form():
@@ -76,7 +198,14 @@ def show_posts(post_id):
 
     post = Post.query.get(post_id)
 
-    return render_template('post_details.html', post=post)
+    likes = Like.query.filter(Like.user_id == g.user_id).all()
+
+    like_ids = [like.post_id for like in likes]
+
+    return render_template('post_details.html', 
+                             user = User.query.get(g.user_id),
+                             like_ids=like_ids,
+                             post=post)
 
 
 @app.route('/submit_post', methods=['POST'])
@@ -100,22 +229,9 @@ def submit_post():
     db.session.commit()
     return redirect(f"/posts/{post.post_id}")
 
-@app.route('/dashboard')
-@login_required 
-def show_dashboard():
-    post_tags = Post_tag.query.filter(Post_tag.user_id == g.user_id).all()
 
-    all_tags = Tag.query.all()
-    total_tags = []
-    for each in all_tags:
-        total_tags.append(each)
-
-    return render_template('dashboard.html', 
-                        user=g.current_user,
-                        posts_tags=post_tags)
-
+    
 @app.route('/register_page', methods=['GET']) 
-
 def show_login_and_register():
 
     return render_template('login.html')
@@ -140,6 +256,11 @@ def register_user():
                     password=password)
         db.session.add(user)
         db.session.commit()
+        for tag in tags:
+            connection = Post_tag(user_id=user.user_id, tag_id=int(tag))
+            db.session.add(connection)
+            db.session.commit()
+        
         for tag in tags:
             connection = Post_tag(user_id=user.user_id, tag_id=int(tag))
             db.session.add(connection)

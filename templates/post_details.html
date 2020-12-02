@@ -2,17 +2,34 @@
 
 {% block title %}{{ post.post_title }} - Details{% endblock %}
 
-{% block body %}
-<h1>{{ post.post_title }}</h1>
+{% block bod %}
+<script src-"/static/js/like.js"></script>
+    <div class="rowsie">
+         <!--Link that takes back to timeline, holds place in scroll -->
+         <h2 class="post-title">{{ post.post_title }}</h2>
+    <h6>
+        <button>
+            {% if post.post_id in like_ids %}
+                  style="color : red;"
+            {% endif %}
+            type="button" id="{{ post.post_id }}"" class="btn btn-default btn-sm like">
+               <span class="glyphicon glyphicon-heart"></span>       
+        </button>
 
-<p>
-    {{ post.post_body }}
-</p>
+        Published: {{ post.publish_date}}
+    </h6> 
+    <p>
+        {{ post.post_body }}
+    </p>
+    
+    <img src="{{ post.image }}">
+    
+    <p>
+        {{ post.link }}
+    </p>    
+    </div>
 
-<img src="{{ post.image }}">
 
-<p>
-    {{ post.link }}
-</p>
+
 {% endblock %}}
 

@@ -3,12 +3,39 @@
 
 {% block body %}
 <h1> Succefully Log In, {{ user.user_name }}!!!!</h1>
-{% for post in posts %}
-<div>
-    <p>{{ post.user_id.user_name }}
-        <b>{{ post.body}}</b>
-    </p>
-</div>
-{% endfor %}
+
+    <script src="/static/js/like.js"></script>
+    {% if not like %}
+                <h4>You have not like any articles yet!</h4>
+                <br>
+                <br>
+                <br>
+    {% endif %} 
+
+    {% for post in posts %}
+    <div id = "div-{{post['db_info'].post_id}}" class="rowsie font-two">
+        <h2>{{ post['db_info'].post_id }}</h2>
+    <h3>
+        <a href="/posts/{{ post['db_info'].post_id }}" class='post=title'>
+            {{ post['db_info'].title }}
+        </a>
+    </h3>
+    <h6>
+        <button
+        {% if post['db_info'].post_id in like_ids %}
+             style="color:red;"
+        {% endif %}
+        type="button" id ="{{post['db_info'].post_id}}" class="btn btn-default btn-sm like">
+        <span class="glyphicon glyphicon-heart"></span>
+       </button>
+       
+       Published: {{ post['db_info'].publish_date }}
+    </h6>  
+    
+      <p>{{ post['title'] }}</p>
+      <p>{{ post['body'] }}</p>
+    
+    </div>
+    {% endfor %}
 
 {% endblock %}
