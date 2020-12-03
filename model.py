@@ -1,4 +1,4 @@
-
+"""Models and database functions for my project."""
 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -10,14 +10,16 @@ class User(db.Model):
     """A User"""
 
     __tablename__ = 'users'
-
+    
     user_id = db.Column(db.Integer, 
               autoincrement=True,
               primary_key=True)
-    user_name = db.Column(db.String, unique=True)          
-    email=db.Column(db.String, unique=True)
-    password = db.Column(db.String)
-
+    user_name = db.Column(db.String(50), unique=True, nullable=False)          
+    email = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(15), nullable=False)
+    avatar = db.Column(db.String, default="Users-User-Female-icon.png")
+    background_img = db.Column(db.String, default="fog-56a407943df78cf772806f75.jpg")
+    
     
     def __repr__(self):
     
@@ -26,111 +28,82 @@ class User(db.Model):
      return f'<User user_id={self.user_id} email={self.email}>'
         
         
-class Room(db.Model):
-    """A Room""" 
+class Blog(db.Model):
+    """Blog which users follow""" 
 
-    __tablename__ = 'rooms'
+    __tablename__ = 'blogss'
 
-    room_id = db.Column(db.Integer, 
+    blog_id = db.Column(db.Integer, 
                     autoincrement=True,
                      primary_key=True)
-    room_name = db.Column(db.String, unique=True)
-
+    name = db.Column(db.String(100), nullable=False)
+    rss_url = db.Column(db.String(200), nullable=False)
+    blog_url = db.Column(db.String(100), nullable=False)
+    build_date = db.Column(db.String(100), nullable=True)
+    most_recent = db.Column(db.String(100), nullable=True)
     def __repr__(self):
         return f'<Room room_id={self.room_id} name={self.room_name}>'               
 
-class Post(db.Model):
-    """ A Post"""
+class Article(db.Model):
+    """ Articles from rss feeds of blogs that my users follow"""
 
-    __tablename__ = 'posts'
-
-    post_id = db.Column(db.Integer, 
+    __tablename__ = 'articles'
+    
+    article_id = db.Column(db.Integer, 
                     autoincrement=True,
                       primary_key=True)
-    image = db.Column(db.String)
-    link =  db.Column(db.String)
-    publish_date = db.Column(db.DateTime, server_default=func.now())
-    post_title = db.Column(db.String)
-    post_body = db.Column(db.String)
-    image = db.Column(db.String)
+    title = db.Column(db.String, nullable=False)
+    publish_date = db.Column(db.DateTime, server_default=func.now(), nullable=False)
+    link =  db.Column(db.String, nullable=False)
+    activity = db.Column (db.Boolean, default = True)
+    description = db.Column(db.String, nullable = True)
+    content = db.Column(db.String, nullable=True)
     
+    blog_id = db.Column(db.Integer, db.ForeignKey('blogs.blog_id'))
     
-    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
-    room_id = db.Column(db.Integer, db.ForeignKey('rooms.room_id'))
-    
-    user = db.relationship('User', 
-                            backref='posts')
-    room = db.relationship('Room', backref='posts')
+    blog = db.relationship('Blog', backref='blogs')
                              
     def __repr__(self):
         return f'<Post post_id={self.post_id} link={self.link}>'
 
 class Like(db.Model):
-    __tablename__ = 'likes'
+    "Favorite articles"
 
+    __tablename__ = 'likes'
+    __table_args__ = (db.UniqueConstaint('user_id', 'article_id'),)
+    
     like_id = db.Column(db.Integer, 
                     autoincrement=True,
                      primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.post_id'))
+    hidden = db.Column(db.Boolean, default=False)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey('articles.article_id'), nullable=False)
     
     user = db.relationship('User', backref='likes')
-    post = db.relationship('Post', backref='likes')
+    article = db.relationship('Article', backref='likes')
     
     def __repr__(self):
         return f'<Like like_id={self.like_id}>'  
 
 
-class Tag(db.Model):
-    __tablename__ = 'tags'
+class User_blog(db.Model):
+    "Association table between users and blogs"
 
-    tag_id = db.Column(db.Integer, 
+    __tablename__ = 'user_blogs'
+
+    user_blog_id = db.Column(db.Integer, 
                     autoincrement=True,
                      primary_key=True)
-    name = db.Column(db.String, unique=True)
-    
-    def __repr__(self):
-        return f'<Tag tag_id={self.tag_id} text={self.text}>'
-
-class Post_tag(db.Model):
-    __tablename__ = 'post_tags'
-
-    post_tag_id = db.Column(db.Integer, 
-                    autoincrement=True,
-                     primary_key=True)
-    tag_id = db.Column(db.Integer, db.ForeignKey('tags.tag_id'))
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.post_id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
-    post = db.relationship('Post',  
-                            backref='post_tags')
+    blog_id = db.Column(db.Integer, db.ForeignKey('blogs.blog_id'))
     
-    tag = db.relationship('Tag', backref='post_tags')
-    user = db.relationship("User", backref='post_tags')
-    post = db.relationship('Post',  
-                            backref='post_tags')
+    user = db.relationship("User", backref='user_blogs')
+    blog = db.relationship('Blog',  
+                            backref='user_blogs')
     def __repr__(self):
-        return f'<Post_tag post_tag_id={self.post_tag_id}>'   
-
-class Comment(db.Model):
-    __tablename__ = 'comments'
-    
-    comment_id = db.Column(db.Integer, 
-                    autoincrement=True,
-                     primary_key=True)
-    comment_time = db.Column(db.DateTime)
-    body = db.Column(db.String, unique=True)
-    
-    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.post_id'))
-    
-    user = db.relationship('User', backref='comments')
-    post = db.relationship('Post',  
-                            backref='comments')
-    def __repr__(self):
-        return f'<Tag post_id={self.post_id} body={self.body}>' 
-
-             
-           
+        return f'<User_blog_id={self.user_blog_id}>'   
+      
 
 
 def connect_to_db(app):
